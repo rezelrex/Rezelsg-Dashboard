@@ -47,7 +47,7 @@ app = FastAPI(title="RezlSG Dashboard API")
 # Allow React frontend to communicate with this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=["*"], # <--- This opens the gate for Vercel
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
