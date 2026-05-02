@@ -17,7 +17,7 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'https://cdn-icons-png.flaticon.com/512/3208/3208265.png',
+            src: '/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
