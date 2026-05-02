@@ -48,7 +48,7 @@ app = FastAPI(title="RezlSG Dashboard API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://rezelsg-dashboard.vercel.app/"
+        "https://rezelsg-dashboard.vercel.app"
         ], 
     allow_credentials=False,
     allow_methods=["*"],
