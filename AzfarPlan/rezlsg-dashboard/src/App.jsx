@@ -4,7 +4,7 @@ import {
   Trophy, Target, CalendarDays, Activity, Clock
 } from 'lucide-react';
 
-const API_URL = 'https://rezelsg-dashboard-production.up.railway.app';
+const API_URL = 'https://rezelsg-dashboard-production.up.railway.app/api';
 
 const App = () => {
   const [loading, setLoading] = useState(true);
