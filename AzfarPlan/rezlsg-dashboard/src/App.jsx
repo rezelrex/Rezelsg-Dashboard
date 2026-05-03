@@ -161,30 +161,30 @@ const App = () => {
     return `${m}:${s}`;
   };
 
-  // --- REAL CORRELATION DATA MAPPING ---
-  const generateChartData = () => {
-    // Grab the last 6 days of actual history from the database
-    const recentHistory = history.slice(-6).map(h => {
+  // --- UPDATED CONSISTENCY DATA MAPPING ---
+  const generateConsistencyData = () => {
+    // Get last 14 days to keep the chart readable on mobile
+    const recentHistory = history.slice(-14).map(h => {
       const dateObj = new Date(h.date);
-      const dayName = dateObj.toLocaleDateString('en-SG', { weekday: 'short' });
+      // Count how many habits were TRUE for that day
+      const dayScore = Object.values(h.habits || {}).filter(Boolean).length;
+      
       return {
-        day: dayName,
-        score: h.score,
-        sleep: h.sleep || 0
+        day: dateObj.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' }),
+        count: dayScore,
       };
     });
 
-    // Append today's live, unsaved progress to the end of the chart
+    // Add Today's live count
     recentHistory.push({
       day: 'Today',
-      score: habitProgress,
-      sleep: metrics.sleep || 0
+      count: completedHabits,
     });
 
     return recentHistory;
   };
-  // THIS IS THE CRITICAL LINE THAT WAS MISSING OR MISPLACED:
-  const correlationData = generateChartData();
+
+  const consistencyData = generateConsistencyData();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl dark:bg-slate-900 dark:text-white">Loading RezlSG Systems...</div>;
 
@@ -340,43 +340,56 @@ const App = () => {
             <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-6">
               <Activity className="w-5 h-5 text-indigo-500" /> Sleep vs. Performance
             </h2>
-            <div className="w-full h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
-                  <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ fontWeight: 'bold' }}
-                  />
-                  {/* Bar for Execution Score (0-100) */}
-                  <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
-                  {/* Line for Sleep Hours (0-12) overlaying the bars */}
-                  <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height="80%">
+              <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
+                <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ fontWeight: 'bold' }}
+                />
+                {/* Bar for Execution Score (0-100) */}
+                <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+                {/* Line for Sleep Hours (0-12) overlaying the bars */}
+                <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 h-auto overflow-y-auto">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-6">
-              <CalendarDays className="w-6 h-6 text-rose-500" /> Milestone Roadmap
+          {/* CONSISTENCY MOUNTAIN CHART */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-2">
+              <Flame className="w-5 h-5 text-orange-500" /> Consistency Mountain
             </h2>
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
-              
-              <MilestonePhase title="Phase 1: Launchpad" timeframe="May - Jun">
-                <MilestoneItem title="Graduate SUTD (CS & Design)" checked={milestones.p1_graduate} onChange={() => toggleMilestone('p1_graduate')} />
-                <MilestoneItem title="Secure $5k+ Fintech/AI Job" checked={milestones.p1_job} onChange={() => toggleMilestone('p1_job')} />
-                <MilestoneItem title="Hit 60kg Bodyweight" checked={milestones.p1_60kg} onChange={() => toggleMilestone('p1_60kg')} />
-              </MilestonePhase>
-
-              <MilestonePhase title="Phase 2: Optimization" timeframe="Jul - Sep">
-                <MilestoneItem title="Deploy new RezlSG Webapp" checked={milestones.p2_webapp} onChange={() => toggleMilestone('p2_webapp')} />
-                <MilestoneItem title="Master Video Editing Workflow" checked={milestones.p2_video} onChange={() => toggleMilestone('p2_video')} />
-              </MilestonePhase>
-
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Total habits completed per day (Goal: 6)</p>
+            
+            <div className="w-full h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={consistencyData}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? '#334155' : '#e2e8f0'} />
+                  <XAxis dataKey="day" hide />
+                  <YAxis domain={[0, 6]} hide />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none' }}
+                  />
+                  <Area 
+                    type="step" 
+                    dataKey="count" 
+                    stroke="#6366f1" 
+                    strokeWidth={3} 
+                    fillOpacity={1} 
+                    fill="url(#colorCount)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </section>
