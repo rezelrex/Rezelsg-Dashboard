@@ -1,20 +1,18 @@
 import os
+from datetime import datetime, timedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # --- Dynamic Database Setup ---
-# Railway automatically injects a DATABASE_URL environment variable.
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./rezlsg.db")
 
-# SQLAlchemy requires the prefix 'postgresql://' but Railway provides 'postgres://'
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# SQLite requires specific connect_args, Postgres does not
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 else:
@@ -29,27 +27,27 @@ class UserData(Base):
     __tablename__ = "user_data"
     id = Column(Integer, primary_key=True, index=True)
     habits = Column(JSON)
-    metrics = Column(JSON)
+    metrics = Column(JSON) # Sleep saves automatically here since it's JSON!
     milestones = Column(JSON)
     last_active_date = Column(String)
 
 class History(Base):
-    __tablename__ = "history"
+    # RENAMED to force a fresh table with our new columns
+    __tablename__ = "daily_history" 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(String, unique=True, index=True)
     score = Column(Float)
+    habits = Column(JSON)  # NEW: Tracks exact habits for streaks
+    sleep = Column(Float)  # NEW: Tracks sleep for the correlation chart
 
 Base.metadata.create_all(bind=engine)
 
 # --- FastAPI App ---
 app = FastAPI(title="RezlSG Dashboard API")
 
-# Allow React frontend to communicate with this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://rezelsg-dashboard.vercel.app"
-        ], 
+    allow_origins=["https://rezelsg-dashboard.vercel.app"], 
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,6 +63,8 @@ class StatePayload(BaseModel):
 class HistoryPayload(BaseModel):
     date: str
     score: float
+    habits: Dict[str, bool]
+    sleep: float
 
 # --- Endpoints ---
 @app.get("/api/state")
@@ -101,9 +101,15 @@ def update_state(payload: StatePayload):
 @app.get("/api/history")
 def get_history():
     db = SessionLocal()
-    history = db.query(History).all()
+    # Order ascending so charts flow left to right (oldest to newest)
+    history = db.query(History).order_by(History.date.asc()).all()
     db.close()
-    return [{"date": h.date, "score": h.score} for h in history]
+    return [{
+        "date": h.date, 
+        "score": h.score,
+        "habits": h.habits or {},
+        "sleep": h.sleep or 0
+    } for h in history]
 
 @app.post("/api/history")
 def add_history(payload: HistoryPayload):
@@ -111,9 +117,58 @@ def add_history(payload: HistoryPayload):
     existing = db.query(History).filter(History.date == payload.date).first()
     if existing:
         existing.score = payload.score
+        existing.habits = payload.habits
+        existing.sleep = payload.sleep
     else:
-        new_entry = History(date=payload.date, score=payload.score)
+        new_entry = History(
+            date=payload.date, 
+            score=payload.score,
+            habits=payload.habits,
+            sleep=payload.sleep
+        )
         db.add(new_entry)
     db.commit()
     db.close()
     return {"status": "success"}
+
+@app.get("/api/streaks")
+def get_streaks():
+    db = SessionLocal()
+    history = db.query(History).all()
+    db.close()
+    
+    # Map out the default streaks
+    streaks = {
+        "tahajjud": 0, "gymOrRun": 0, "rezlSgDev": 0, 
+        "contentCreation": 0, "jobApps": 0, "baking": 0
+    }
+    
+    if not history:
+        return streaks
+        
+    # Map dates to habits for lightning fast lookups
+    history_map = {h.date: h.habits for h in history if h.habits}
+    
+    # Find the most recent day in the database
+    latest_entry = max(history, key=lambda x: x.date)
+    latest_date_obj = datetime.strptime(latest_entry.date, "%Y-%m-%d")
+    
+    # Calculate streak by stepping backwards 1 day at a time
+    for habit_key in streaks.keys():
+        current_streak = 0
+        current_date_obj = latest_date_obj
+        
+        while True:
+            date_str = current_date_obj.strftime("%Y-%m-%d")
+            habits_for_day = history_map.get(date_str)
+            
+            # If the date exists AND the habit is true, increase streak
+            if habits_for_day and habits_for_day.get(habit_key) == True:
+                current_streak += 1
+                current_date_obj -= timedelta(days=1)
+            else:
+                break # Streak broken!
+                
+        streaks[habit_key] = current_streak
+        
+    return streaks
