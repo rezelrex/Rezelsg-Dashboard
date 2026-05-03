@@ -23,6 +23,7 @@ const App = () => {
   const [history, setHistory] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [prayerTimes, setPrayerTimes] = useState(null);
+  const [streaks, setStreaks] = useState({});
   
   // --- DEEP WORK TIMER STATE ---
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes default
