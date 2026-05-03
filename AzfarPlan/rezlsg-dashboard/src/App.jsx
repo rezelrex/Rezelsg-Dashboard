@@ -340,7 +340,7 @@ const App = () => {
             <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-6">
               <Activity className="w-5 h-5 text-indigo-500" /> Sleep vs. Performance
             </h2>
-            <div className="flex-1 w-full min-h-0">
+            <div className="w-full h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
