@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+    
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
@@ -25,4 +26,11 @@ export default defineConfig({
       }
     })
   ],
+  plugins: [react()],
+  build: {
+    // Add this chunk if Vercel still complains after pushing package.json
+    rollupOptions: {
+      external: ['recharts'], 
+    }
+  }
 })
