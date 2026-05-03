@@ -354,22 +354,20 @@ const App = () => {
             <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-6">
               <Activity className="w-5 h-5 text-indigo-500" /> Sleep vs. Performance
             </h2>
-            <ResponsiveContainer width="100%" height="80%">
-              <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
-                <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                />
-                {/* Bar for Execution Score (0-100) */}
-                <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
-                {/* Line for Sleep Hours (0-12) overlaying the bars */}
-                <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {/* Added min-h-[300px] to ensure the math is never -1 */}
+            <div className="w-full min-h-[300px]">
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
+                  <Tooltip contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none' }} />
+                  <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+                  <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* CONSISTENCY MOUNTAIN CHART */}
@@ -379,8 +377,9 @@ const App = () => {
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Total habits completed per day (Goal: 6)</p>
             
-            <div className="w-full h-48">
-              <ResponsiveContainer width="100%" height="100%">
+            {/* Using a fixed pixel height inside the ResponsiveContainer is the cleanest way to stop warnings */}
+            <div className="w-full min-h-[200px]">
+              <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={consistencyData}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -391,17 +390,8 @@ const App = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? '#334155' : '#e2e8f0'} />
                   <XAxis dataKey="day" hide />
                   <YAxis domain={[0, 6]} hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none' }}
-                  />
-                  <Area 
-                    type="step" 
-                    dataKey="count" 
-                    stroke="#6366f1" 
-                    strokeWidth={3} 
-                    fillOpacity={1} 
-                    fill="url(#colorCount)" 
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none' }} />
+                  <Area type="step" dataKey="count" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
