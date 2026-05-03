@@ -154,37 +154,51 @@ const App = () => {
   const habitProgress = Math.round((completedHabits / totalHabits) * 100) || 0;
   const currentQuote = dailyQuotes[currentTime.getDay() % dailyQuotes.length];
 
+  // --- 1. SLEEP CORRELATION DATA ---
+  const generateCorrelationData = () => {
+    const recentHistory = history.slice(-6).map(h => {
+      const dateObj = new Date(h.date);
+      return {
+        day: dateObj.toLocaleDateString('en-SG', { weekday: 'short' }),
+        score: h.score,
+        sleep: h.sleep || 0
+      };
+    });
+    recentHistory.push({
+      day: 'Today',
+      score: habitProgress,
+      sleep: metrics.sleep || 0
+    });
+    return recentHistory;
+  };
+
+  // --- 2. CONSISTENCY MOUNTAIN DATA ---
+  const generateConsistencyData = () => {
+    const recentHistory = history.slice(-14).map(h => {
+      const dateObj = new Date(h.date);
+      const dayScore = Object.values(h.habits || {}).filter(Boolean).length;
+      return {
+        day: dateObj.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' }),
+        count: dayScore,
+      };
+    });
+    recentHistory.push({
+      day: 'Today',
+      count: completedHabits,
+    });
+    return recentHistory;
+  };
+
+  // --- 3. DEFINE BOTH VARIABLES FOR THE UI ---
+  const correlationData = generateCorrelationData();
+  const consistencyData = generateConsistencyData();
+
   // Timer formatting
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
-
-  // --- UPDATED CONSISTENCY DATA MAPPING ---
-  const generateConsistencyData = () => {
-    // Get last 14 days to keep the chart readable on mobile
-    const recentHistory = history.slice(-14).map(h => {
-      const dateObj = new Date(h.date);
-      // Count how many habits were TRUE for that day
-      const dayScore = Object.values(h.habits || {}).filter(Boolean).length;
-      
-      return {
-        day: dateObj.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' }),
-        count: dayScore,
-      };
-    });
-
-    // Add Today's live count
-    recentHistory.push({
-      day: 'Today',
-      count: completedHabits,
-    });
-
-    return recentHistory;
-  };
-
-  const consistencyData = generateConsistencyData();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl dark:bg-slate-900 dark:text-white">Loading RezlSG Systems...</div>;
 
