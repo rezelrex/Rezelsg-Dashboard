@@ -78,8 +78,13 @@ const App = () => {
       try {
         const stateRes = await fetch(`${API_URL}/state`);
         const historyRes = await fetch(`${API_URL}/history`);
+        const streaksRes = await fetch(`${API_URL}/streaks`);
+
         const historyData = await historyRes.json();
+        const streaksData = await streaksRes.json();
+
         setHistory(historyData);
+        setStreaks(streaksData);
         const stateData = await stateRes.json();
         
         if (stateData.status !== 'no_data') {
@@ -92,7 +97,12 @@ const App = () => {
             await fetch(`${API_URL}/history`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ date: stateData.last_active_date, score: prevScore })
+              body: JSON.stringify({ 
+                date: stateData.last_active_date, 
+                score: prevScore,
+                habits: stateData.habits,              // NEW: Sends the JSON of checked habits
+                sleep: stateData.metrics.sleep || 0    // NEW: Sends yesterday's sleep
+              })
             });
 
             setHabits(defaultHabits);
@@ -100,8 +110,11 @@ const App = () => {
             setMilestones(stateData.milestones);
             setLastActiveDate(today);
             
+            // Re-fetch history and streaks after a reset
             const newHistoryRes = await fetch(`${API_URL}/history`);
+            const newStreaksRes = await fetch(`${API_URL}/streaks`);
             setHistory(await newHistoryRes.json());
+            setStreaks(await newStreaksRes.json());
           } else {
             setHabits(stateData.habits);
             setMetrics(stateData.metrics);
@@ -147,16 +160,28 @@ const App = () => {
     return `${m}:${s}`;
   };
 
-  // Mock Correlation Data (This merges your new sleep state with recent history)
-  const correlationData = [
-    { day: 'Mon', score: 45, sleep: 5.5 },
-    { day: 'Tue', score: 85, sleep: 7.5 },
-    { day: 'Wed', score: 30, sleep: 4.0 }, // Notice the low sleep = low score
-    { day: 'Thu', score: 90, sleep: 8.0 },
-    { day: 'Fri', score: 75, sleep: 6.5 },
-    { day: 'Sat', score: 100, sleep: 8.5 },
-    { day: 'Today', score: habitProgress, sleep: metrics.sleep || 0 }, 
-  ];
+  // --- REAL CORRELATION DATA MAPPING ---
+  const generateChartData = () => {
+    // Grab the last 6 days of actual history from the database
+    const recentHistory = history.slice(-6).map(h => {
+      const dateObj = new Date(h.date);
+      const dayName = dateObj.toLocaleDateString('en-SG', { weekday: 'short' });
+      return {
+        day: dayName,
+        score: h.score,
+        sleep: h.sleep || 0
+      };
+    });
+
+    // Append today's live, unsaved progress to the end of the chart
+    recentHistory.push({
+      day: 'Today',
+      score: habitProgress,
+      sleep: metrics.sleep || 0
+    });
+
+    return recentHistory;
+  };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl dark:bg-slate-900 dark:text-white">Loading RezlSG Systems...</div>;
 
@@ -222,13 +247,12 @@ const App = () => {
             <RadialProgress progress={habitProgress} />
           </div>
           <div className="space-y-3">
-             {/* Note: Streaks are visually mocked here. You will tie these to backend logic later. */}
-             <HabitItem icon={<Moon/>} title="Tahajjud & Fajr" streak={14} checked={habits.tahajjud} onChange={() => toggleHabit('tahajjud')} />
-             <HabitItem icon={<Dumbbell/>} title="Fitness System" streak={5} checked={habits.gymOrRun} onChange={() => toggleHabit('gymOrRun')} />
-             <HabitItem icon={<Code2/>} title="RezlSG Dev" streak={21} checked={habits.rezlSgDev} onChange={() => toggleHabit('rezlSgDev')} />
-             <HabitItem icon={<Video/>} title="Brand Content" streak={2} checked={habits.contentCreation} onChange={() => toggleHabit('contentCreation')} />
-             <HabitItem icon={<Briefcase/>} title="Career Acceleration" streak={0} checked={habits.jobApps} onChange={() => toggleHabit('jobApps')} />
-             <HabitItem icon={<ChefHat/>} title="Skill Building" streak={8} checked={habits.baking} onChange={() => toggleHabit('baking')} />
+             <HabitItem icon={<Moon/>} title="Tahajjud & Fajr" streak={streaks.tahajjud || 0} checked={habits.tahajjud} onChange={() => toggleHabit('tahajjud')} />
+             <HabitItem icon={<Dumbbell/>} title="Fitness System" streak={streaks.gymOrRun || 0} checked={habits.gymOrRun} onChange={() => toggleHabit('gymOrRun')} />
+             <HabitItem icon={<Code2/>} title="RezlSG Dev" streak={streaks.rezlSgDev || 0} checked={habits.rezlSgDev} onChange={() => toggleHabit('rezlSgDev')} />
+             <HabitItem icon={<Video/>} title="Brand Content" streak={streaks.contentCreation || 0} checked={habits.contentCreation} onChange={() => toggleHabit('contentCreation')} />
+             <HabitItem icon={<Briefcase/>} title="Career Acceleration" streak={streaks.jobApps || 0} checked={habits.jobApps} onChange={() => toggleHabit('jobApps')} />
+             <HabitItem icon={<ChefHat/>} title="Skill Building" streak={streaks.baking || 0} checked={habits.baking} onChange={() => toggleHabit('baking')} />
           </div>
         </section>
 
