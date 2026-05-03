@@ -5,7 +5,7 @@ import {
   Play, Pause, RotateCcw, Timer, Flame, BedDouble
 } from 'lucide-react';
 import { 
-  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
 
 const API_URL = 'https://rezelsg-dashboard-production.up.railway.app/api'; 
