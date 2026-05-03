@@ -183,6 +183,8 @@ const App = () => {
 
     return recentHistory;
   };
+  // THIS IS THE CRITICAL LINE THAT WAS MISSING OR MISPLACED:
+  const correlationData = generateChartData();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-xl dark:bg-slate-900 dark:text-white">Loading RezlSG Systems...</div>;
 
