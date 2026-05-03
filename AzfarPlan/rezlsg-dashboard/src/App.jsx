@@ -340,22 +340,24 @@ const App = () => {
             <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white mb-6">
               <Activity className="w-5 h-5 text-indigo-500" /> Sleep vs. Performance
             </h2>
-            <ResponsiveContainer width="100%" height="80%">
-              <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
-                <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                />
-                {/* Bar for Execution Score (0-100) */}
-                <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
-                {/* Line for Sleep Hours (0-12) overlaying the bars */}
-                <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <div className="flex-1 w-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={correlationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#e2e8f0'} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="left" tick={{ fill: darkMode ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 12]} hide />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  {/* Bar for Execution Score (0-100) */}
+                  <Bar yAxisId="left" dataKey="score" name="Execution %" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+                  {/* Line for Sleep Hours (0-12) overlaying the bars */}
+                  <Line yAxisId="right" type="monotone" dataKey="sleep" name="Sleep (hrs)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 h-auto overflow-y-auto">
