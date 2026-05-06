@@ -207,9 +207,21 @@ const App = () => {
       
       {/* HEADER SECTION */}
       <header className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Azfar's 2026 Master Plan</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">SUTD to RezlSG Founder • The Final Sprint</p>
+        <div className="flex items-center gap-4">
+          {/* Logo Implementation */}
+          <img 
+            src="/logo.png" 
+            alt="RezlSG Logo" 
+            className="w-16 h-16 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700" 
+          />
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Azfar's 2026 Master Plan
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              SUTD to RezlSG Founder • The Final Sprint
+            </p>
+          </div>
         </div>
         
         <div className="flex gap-4">
